@@ -1,0 +1,149 @@
+import React, { useState, useEffect } from 'react';
+import { Shield, Zap, Target, Scale, Award, BookOpen, ExternalLink, Copyright } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+
+const YeboahSimulator = () => {
+  const [mass, setMass] = useState(0.5); // kg
+  const [velocity, setVelocity] = useState(10); // m/s
+  const [resistance, setResistance] = useState(500); // Pa (simplified)
+  
+  // Yeboah's Law Calculation: η = (mv²) / (2dτA)
+  // For this sim, we simplify (2dτA) into a single "Resistance" factor
+  const calculateEta = (m, v, r) => {
+    return (m * Math.pow(v, 2)) / r;
+  };
+
+  const currentEta = calculateEta(mass, velocity, resistance).toFixed(2);
+
+  const generateData = () => {
+    let points = [];
+    for (let v = 0; v <= 20; v += 2) {
+      points.push({
+        v: v,
+        eta: calculateEta(mass, v, resistance),
+      });
+    }
+    return points;
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+      {/* Top Branding Bar */}
+      <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center border-b pb-6 border-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="bg-blue-600 p-3 rounded-lg text-white">
+            <Shield size={32} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800 uppercase">The Yeboah Institute</h1>
+            <p className="text-sm text-slate-500 font-medium">Applied Mechanics & Geometric Frameworks</p>
+          </div>
+        </div>
+        <div className="mt-4 md:mt-0 flex flex-col items-end">
+          <div className="flex items-center gap-2 text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+            <Copyright size={14} />
+            <span>Licensed under CC-BY 4.0</span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">Authored by Clifford Yeboah (2024)</p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Controls Panel */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="text-amber-500" size={20} />
+            <h2 className="font-bold text-slate-700 uppercase tracking-wide">Variable Input</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tool Mass (m): {mass}kg</label>
+              <input 
+                type="range" min="0.1" max="2" step="0.1" value={mass} 
+                onChange={(e) => setMass(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Impact Velocity (v): {velocity}m/s</label>
+              <input 
+                type="range" min="1" max="30" step="1" value={velocity} 
+                onChange={(e) => setVelocity(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Material Resistance (Σ): {resistance}</label>
+              <input 
+                type="range" min="100" max="2000" step="100" value={resistance} 
+                onChange={(e) => setResistance(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+            </div>
+          </div>
+
+          <div className={`p-6 rounded-xl border-2 text-center transition-colors ${currentEta >= 1 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+            <p className="text-xs font-bold text-slate-500 uppercase mb-1">Efficiency Index (η)</p>
+            <p className={`text-5xl font-black ${currentEta >= 1 ? 'text-emerald-600' : 'text-rose-600'}`}>{currentEta}</p>
+            <p className="text-sm font-bold mt-2 uppercase tracking-widest">
+              {currentEta >= 1 ? 'Success: Cleavage' : 'Failure: Rebound'}
+            </p>
+          </div>
+        </div>
+
+        {/* Visualization Panel */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-96">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                <Scale size={18} className="text-blue-500" />
+                Empirical Curve Analysis
+              </h3>
+              <div className="text-xs font-mono text-slate-400">Yeboah's Law: η = f(v)</div>
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={generateData()}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="v" label={{ value: 'Velocity (m/s)', position: 'insideBottom', offset: -5 }} />
+                <YAxis label={{ value: 'η Value', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <ReferenceLine y={1} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'Threshold', position: 'right', fill: '#ef4444', fontSize: 12 }} />
+                <Line type="monotone" dataKey="eta" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-900 text-white p-6 rounded-2xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="text-blue-400" size={20} />
+                <h4 className="font-bold uppercase text-sm">Intellectual Property</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                By citing "Yeboah, C. (2024)", you acknowledge the geometric derivation of impact efficiency. Unauthorized use without attribution is a violation of the CC-BY 4.0 license.
+              </p>
+            </div>
+            <div className="bg-blue-600 text-white p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpen className="text-blue-200" size={20} />
+                  <h4 className="font-bold uppercase text-sm">Citation Ready</h4>
+                </div>
+                <p className="text-xs text-blue-100 font-mono bg-blue-700 p-2 rounded">
+                  Yeboah, C. (2024). Yeboah’s Law... GitHub.
+                </p>
+              </div>
+              <button className="mt-4 flex items-center justify-center gap-2 bg-white text-blue-600 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors">
+                <ExternalLink size={16} />
+                View Repository
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default YeboahSimulator;
